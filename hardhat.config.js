@@ -15,7 +15,7 @@ module.exports = {
       url: `https://eth-rinkeby.alchemyapi.io/v2/${alchemyKey}`,
       accounts: {
         mnemonic
-      }
+      },
     }
   },
   etherscan: {

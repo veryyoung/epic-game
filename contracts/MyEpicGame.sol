@@ -8,6 +8,10 @@ import "hardhat/console.sol";
 
 contract MyEpicGame is ERC721 {
 
+    event CharacterNFTMinted(address sender, uint256 tokenId, uint256 characterIndex);
+
+    event AttackComplete(uint newBossHp, uint newPlayerHp);
+
     struct CharacterAttributes {
         uint characterIndex;
         string name;
@@ -83,6 +87,8 @@ contract MyEpicGame is ERC721 {
         console.log("Minted NFT w/ tokenId %s and characterIndex %s", newItemId, _characterIndex);
         nftHolders[msg.sender] = newItemId;
         _tokenIds.increment();
+
+        emit CharacterNFTMinted(msg.sender, newItemId, _characterIndex);
     }
 
     function tokenURI(uint256 _tokenId) public view override returns (string memory) {
@@ -92,15 +98,11 @@ contract MyEpicGame is ERC721 {
         string memory strMaxHp = Strings.toString(charAttributes.maxHp);
         string memory strAttackDamage = Strings.toString(charAttributes.attackDamage);
         string memory json = Base64.encode(
-            abi.encodePacked(
-            '{"name": "',
-            charAttributes.name,
-            ' -- NFT #: ',
-            Strings.toString(_tokenId),
-            '", "description": "This is an NFT that lets people play in the game Metaverse Slayer!", "image": "',
-            charAttributes.imageURI,
-            '", "attributes": [ { "trait_type": "Health Points", "value": ',strHp,', "max_value":',strMaxHp,'}, { "trait_type": "Attack Damage", "value": ',
-            strAttackDamage,'} ]}'
+            abi.encodePacked('{"name": "', charAttributes.name, ' -- NFT #: ', Strings.toString(_tokenId),
+                '", "description": "This is an NFT that lets people play in the game Metaverse Slayer!", "image": "',
+                charAttributes.imageURI,
+                '", "attributes": [ { "trait_type": "Health Points", "value": ',strHp,', "max_value":',strMaxHp,'}, { "trait_type": "Attack Damage", "value": ',
+                strAttackDamage,'} ]}'
             )
         );
 
@@ -135,5 +137,24 @@ contract MyEpicGame is ERC721 {
         // Console for ease.
         console.log("Player attacked boss. New boss hp: %s", bigBoss.hp);
         console.log("Boss attacked player. New player hp: %s\n", player.hp);
+        emit AttackComplete(bigBoss.hp, player.hp);
+    }
+
+    function checkIfUserHasNFT() public view returns (CharacterAttributes memory) {
+        uint256 userNftTokenId = nftHolders[msg.sender];
+        if (userNftTokenId > 0 ){
+            return nftHolderAttributes[userNftTokenId];
+        } else {
+            CharacterAttributes memory emptyStruct;
+            return emptyStruct;
+        }
+    }
+
+    function getAllDefaultCharacters() public view returns (CharacterAttributes[] memory) {
+        return defaultCharacters;
+    }
+
+    function getBigBoss() public view returns (BigBoss memory) {
+        return bigBoss;
     }
 }
